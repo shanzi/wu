@@ -2,8 +2,8 @@
 package runner
 
 import (
-	"github.com/fsnotify/fsnotify"
 	"log"
+	"time"
 )
 
 type Runner interface {
@@ -48,44 +48,14 @@ func (r *runner) Start() {
 	if err != nil {
 		log.Fatal("Failed to initialize watcher: ", err)
 	}
-
-	for fp := range changed {
-		log.Println(fp)
+	matched := match(changed, r.patterns)
+	for fp := range matched {
+		files := gather(fp, matched, 500*time.Millisecond)
+		log.Println(files)
 	}
 }
 
 func (r *runner) Exit() {
 	r.abort <- struct{}{}
 	close(r.abort)
-}
-
-func watch(path string, abort <-chan struct{}) (<-chan string, error) {
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		return nil, err
-	}
-
-	err = watcher.Add(path)
-	if err != nil {
-		return nil, err
-	}
-
-	out := make(chan string)
-	go func() {
-		defer close(out)
-		defer watcher.Close()
-		for {
-			select {
-			case <-abort:
-				// Abort watching
-				return
-			case fp := <-watcher.Events:
-				out <- fp.String()
-			case err := <-watcher.Errors:
-				log.Println("Watch Error:", err)
-			}
-		}
-	}()
-
-	return out, nil
 }

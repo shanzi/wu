@@ -2,18 +2,23 @@
 package main
 
 import (
+	"flag"
 	"github.com/shanzi/wu/runner"
 	"os"
 	"path/filepath"
 )
 
+var path = flag.String("p", filepath.Dir(os.Args[0]), "Path to the file or directory to watch")
+
 func main() {
-	var path string
-	if len(os.Args) > 1 {
-		path, _ = filepath.Abs(os.Args[1])
-	} else {
-		path, _ = filepath.Abs(filepath.Dir(os.Args[0]))
+	flag.Parse()
+
+	patterns := []string{"*"}
+	if flag.NArg() > 0 {
+		patterns = flag.Args()
 	}
-	r := runner.NewRunner(path, []string{}, "")
+	abspath, _ := filepath.Abs(*path)
+
+	r := runner.NewRunner(abspath, patterns, "")
 	r.Start()
 }
