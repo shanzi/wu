@@ -2,14 +2,16 @@
 package runner
 
 import (
+	"github.com/shanzi/wu/command"
 	"log"
+	"strings"
 	"time"
 )
 
 type Runner interface {
 	Path() string
 	Patterns() []string
-	Command() string
+	Command() command.Command
 	Start()
 	Exit()
 }
@@ -17,12 +19,12 @@ type Runner interface {
 type runner struct {
 	path     string
 	patterns []string
-	command  string
+	command  command.Command
 
 	abort chan struct{}
 }
 
-func NewRunner(path string, patterns []string, command string) Runner {
+func New(path string, patterns []string, command command.Command) Runner {
 	return &runner{
 		path:     path,
 		patterns: patterns,
@@ -38,7 +40,7 @@ func (r *runner) Patterns() []string {
 	return r.patterns
 }
 
-func (r *runner) Command() string {
+func (r *runner) Command() command.Command {
 	return r.command
 }
 
@@ -46,16 +48,29 @@ func (r *runner) Start() {
 	r.abort = make(chan struct{})
 	changed, err := watch(r.path, r.abort)
 	if err != nil {
-		log.Fatal("Failed to initialize watcher: ", err)
+		log.Fatal("Failed to initialize watcher:", err)
 	}
 	matched := match(changed, r.patterns)
+	log.Println("Start watching...")
+
+	// Run the command once at initially
+	r.command.Start(200 * time.Millisecond)
 	for fp := range matched {
 		files := gather(fp, matched, 500*time.Millisecond)
-		log.Println(files)
+
+		// Terminate previous running command
+		r.command.Terminate(2000 * time.Millisecond)
+
+		log.Println("File changed:", strings.Join(files, ", "))
+
+		// Run new command
+		r.command.Start(200 * time.Millisecond)
 	}
 }
 
 func (r *runner) Exit() {
 	r.abort <- struct{}{}
 	close(r.abort)
+
+	r.command.Terminate(200 * time.Millisecond)
 }

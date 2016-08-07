@@ -30,6 +30,10 @@ func watch(path string, abort <-chan struct{}) (<-chan string, error) {
 			select {
 			case <-abort:
 				// Abort watching
+				err := watcher.Close()
+				if err != nil {
+					log.Fatalln("Failed to stop watch")
+				}
 				return
 			case fp := <-watcher.Events:
 				if fp.Op == fsnotify.Create {
