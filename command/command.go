@@ -24,7 +24,14 @@ type command struct {
 	mutex *sync.Mutex
 }
 
-func New(name string, args ...string) Command {
+func New(cmdstring []string) Command {
+	if len(cmdstring) == 0 {
+		return Empty()
+	}
+
+	name := cmdstring[0]
+	args := cmdstring[1:]
+
 	return &command{
 		name,
 		args,
