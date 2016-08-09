@@ -45,8 +45,6 @@ func (c *command) String() string {
 }
 
 func (c *command) Start(delay time.Duration) {
-	<-time.After(delay) // delay for a while to avoid start too frequently
-
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -60,8 +58,7 @@ func (c *command) Start(delay time.Duration) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stdout // Redirect stderr of sub process to stdout of parent
 
-	log.Println("Running command:", c.String())
-	log.Println()
+	log.Println("- Running command:", c.String())
 
 	err := cmd.Start()
 	if err != nil {
@@ -71,12 +68,14 @@ func (c *command) Start(delay time.Duration) {
 		go func() {
 			cmd.Wait()
 			if cmd.ProcessState.Success() {
-				log.Println("Command exited")
+				log.Println("- Done.")
 			} else {
-				log.Println("Command terminated")
+				log.Println("- Terminated.")
 			}
 		}()
 	}
+
+	time.Sleep(delay) // delay for a while to avoid start too frequently
 }
 
 func (c *command) Terminate(wait time.Duration) {
@@ -109,9 +108,13 @@ func (c *command) Terminate(wait time.Duration) {
 
 	select {
 	case <-ch:
-		return
+		break
 	case <-time.After(wait):
 		log.Println("Try to kill subprocess by force")
 		cmd.Process.Kill()
 	}
+
+	// Wait a very short time here to make sure
+	// the process terminated output has been printed
+	time.Sleep(10 * time.Millisecond)
 }

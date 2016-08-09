@@ -59,7 +59,7 @@ func (r *runner) Start() {
 		files := gather(fp, matched, 500*time.Millisecond)
 
 		// Terminate previous running command
-		r.command.Terminate(2000 * time.Millisecond)
+		r.command.Terminate(5 * time.Second)
 
 		log.Println("File changed:", strings.Join(files, ", "))
 
