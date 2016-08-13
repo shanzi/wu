@@ -111,6 +111,7 @@ func (c *command) Terminate(wait time.Duration) {
 		return
 	}
 
+	log.Println("- Stopping")
 	// Try to stop the process by sending a SIGINT signal
 	if err := c.kill(syscall.SIGINT); err != nil {
 		log.Println("Failed to terminate process with interrupt:", err)

@@ -58,7 +58,6 @@ func (r *runner) Start() {
 	for fp := range matched {
 		files := gather(fp, matched, 500*time.Millisecond)
 
-		log.Println("- Stopping")
 		// Terminate previous running command
 		r.command.Terminate(2 * time.Second)
 
