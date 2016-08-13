@@ -1,11 +1,11 @@
-# wu
+# wu (呜~)
 
-A minimal **w**atch **u**tility to watch changes on file system and run specified
-command on events.
+A minimal **W**atch **U**tility who can run and restart specified command in
+response to file changes automatically.
 
-This utility is intended to provide a simple tool to automate the Edit-Build-Run
-loop of development. Although it is much similar to watch tasks of Grunt or Gulp,
-`wu` is designed to be just a single command with clean interfaces to work with.
+This utility is intended to provide a tiny tool to automate the Edit-Build-Run
+loop of development. Although it is quite similar to watch tasks of Grunt or Gulp,
+`wu` is designed to be just a single command with simple interfaces to work with.
 
 # Install
 
@@ -17,6 +17,23 @@ go get github.com/shanzi/wu
 go install github.com/shanzi/wu
 ```
 
+Precompiled version can be found at the [here](https://github.com/shanzi/wu/releases).
+
+# Usage
+
+Run `wu -h` for help message:
+
+```
+Usage: wu [options] [command]
+  -config string
+        Config file (default ".wu.json")
+  -dir string
+        Directory to watch
+  -pattern string
+        Patterns to filter filenames
+  -save
+        Save options to conf
+```
 
 # Examples
 
@@ -81,7 +98,16 @@ For example, you can start a server written in go by:
 wu -pattern="*.go" go run main.go
 ```
 
-Use `wu -h` to view help for all options.
+`wu` will try to read config file under current directory at the start (default: `.wu.json`),
+you can user `-config` flag to specify the config file by hand. Use `-save` flag to save
+current options.
+
+```
+wu -pattern="*.go" -save go build
+# A `.wu.json` has been created
+
+wu # Running `wu` without any options, it will read from `.wu.json`
+```
 
 # LICENSE
 
