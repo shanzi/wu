@@ -5,7 +5,7 @@ response to file changes automatically.
 
 This utility is intended to provide a tiny tool to automate the Edit-Build-Run
 loop of development. Although it is quite similar to watch tasks of Grunt or Gulp,
-`wu` is designed to be just a single command with simple interfaces to work with.
+`wu` is designed to be just a single command with simplest interfaces to work with.
 
 # Install
 
@@ -17,7 +17,7 @@ go get github.com/shanzi/wu
 go install github.com/shanzi/wu
 ```
 
-Precompiled version can be found at the [here](https://github.com/shanzi/wu/releases).
+Precompiled version can be found [here](https://github.com/shanzi/wu/releases).
 
 # Usage
 
