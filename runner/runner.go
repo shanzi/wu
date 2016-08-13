@@ -58,8 +58,9 @@ func (r *runner) Start() {
 	for fp := range matched {
 		files := gather(fp, matched, 500*time.Millisecond)
 
+		log.Println("- Stopping")
 		// Terminate previous running command
-		r.command.Terminate(5 * time.Second)
+		r.command.Terminate(2 * time.Second)
 
 		log.Println("File changed:", strings.Join(files, ", "))
 
@@ -69,8 +70,10 @@ func (r *runner) Start() {
 }
 
 func (r *runner) Exit() {
+	log.Println()
+	log.Println("Shutting down...")
+
 	r.abort <- struct{}{}
 	close(r.abort)
-
-	r.command.Terminate(200 * time.Millisecond)
+	r.command.Terminate(2 * time.Second)
 }

@@ -29,8 +29,6 @@ func main() {
 		signal.Notify(ch, os.Interrupt)
 
 		<-ch
-		log.Println()
-		log.Println("Shutting down...")
 		r.Exit()
 	}()
 

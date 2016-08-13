@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -18,10 +19,11 @@ type Command interface {
 }
 
 type command struct {
-	name  string
-	args  []string
-	cmd   *exec.Cmd
-	mutex *sync.Mutex
+	name   string
+	args   []string
+	cmd    *exec.Cmd
+	mutex  *sync.Mutex
+	exited chan struct{}
 }
 
 func New(cmdstring []string) Command {
@@ -37,6 +39,7 @@ func New(cmdstring []string) Command {
 		args,
 		nil,
 		&sync.Mutex{},
+		nil,
 	}
 }
 
@@ -45,6 +48,8 @@ func (c *command) String() string {
 }
 
 func (c *command) Start(delay time.Duration) {
+	time.Sleep(delay) // delay for a while to avoid start too frequently
+
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -58,14 +63,26 @@ func (c *command) Start(delay time.Duration) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stdout // Redirect stderr of sub process to stdout of parent
 
+	// Make process group id available for the command to run
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+
 	log.Println("- Running command:", c.String())
 
 	err := cmd.Start()
+	exited := make(chan struct{})
+
 	if err != nil {
 		log.Println("Failed:", err)
 	} else {
 		c.cmd = cmd
+		c.exited = exited
+
 		go func() {
+			defer func() {
+				exited <- struct{}{}
+				close(exited)
+			}()
+
 			cmd.Wait()
 			if cmd.ProcessState.Success() {
 				log.Println("- Done.")
@@ -74,8 +91,6 @@ func (c *command) Start(delay time.Duration) {
 			}
 		}()
 	}
-
-	time.Sleep(delay) // delay for a while to avoid start too frequently
 }
 
 func (c *command) Terminate(wait time.Duration) {
@@ -96,25 +111,27 @@ func (c *command) Terminate(wait time.Duration) {
 		return
 	}
 
-	cmd := c.cmd
 	// Try to stop the process by sending a SIGINT signal
-	cmd.Process.Signal(os.Interrupt)
-
-	ch := make(chan struct{})
-	go func() {
-		cmd.Wait()
-		ch <- struct{}{}
-	}()
-
-	select {
-	case <-ch:
-		break
-	case <-time.After(wait):
-		log.Println("Try to kill subprocess by force")
-		cmd.Process.Kill()
+	if err := c.kill(syscall.SIGINT); err != nil {
+		log.Println("Failed to terminate process with interrupt:", err)
 	}
 
-	// Wait a very short time here to make sure
-	// the process terminated output has been printed
-	time.Sleep(10 * time.Millisecond)
+	for {
+		select {
+		case <-c.exited:
+			return
+		case <-time.After(wait):
+			log.Println("- Killing process")
+			c.kill(syscall.SIGTERM)
+		}
+	}
+}
+
+func (c *command) kill(sig syscall.Signal) error {
+	cmd := c.cmd
+	pgid, err := syscall.Getpgid(cmd.Process.Pid)
+	if err == nil {
+		return syscall.Kill(-pgid, sig)
+	}
+	return err
 }
