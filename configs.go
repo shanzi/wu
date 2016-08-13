@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"regexp"
@@ -19,6 +20,13 @@ var configfile = flag.String("config", ".wu.json", "Config file")
 var directory = flag.String("dir", "", "Directory to watch")
 var pattern = flag.String("pattern", "", "Patterns to filter filenames")
 var saveconf = flag.Bool("save", false, "Save options to conf")
+
+func init() {
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s [options] [command]\n", os.Args[0])
+		flag.PrintDefaults()
+	}
+}
 
 func getConfigs() Configs {
 	flag.Parse()
