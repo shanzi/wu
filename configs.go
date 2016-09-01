@@ -20,6 +20,7 @@ var configfile = flag.String("config", ".wu.json", "Config file")
 var directory = flag.String("dir", "", "Directory to watch")
 var pattern = flag.String("pattern", "", "Patterns to filter filenames")
 var saveconf = flag.Bool("save", false, "Save options to conf")
+var showVersion = flag.Bool("version", false, "Show version info")
 
 func init() {
 	flag.Usage = func() {
@@ -30,6 +31,11 @@ func init() {
 
 func getConfigs() Configs {
 	flag.Parse()
+
+	if *showVersion {
+		PrintVersion()
+		os.Exit(0)
+	}
 
 	conf := readConfigFile()
 

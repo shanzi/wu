@@ -19,9 +19,9 @@ Install packages dependencies:
 ```
 godep get
 ```
-build:
+Build:
 ```
-go build
+make
 ```
 
 Precompiled version can be found [here](https://github.com/shanzi/wu/releases).
