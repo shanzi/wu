@@ -99,20 +99,8 @@ func parsePatterns() []string {
 	if pat == "" {
 		return nil
 	}
-
 	patternSep, _ := regexp.Compile("[,\\s]+")
-
-	patternMap := make(map[string]bool)
-	ret := []string{}
-
-	for _, part := range patternSep.Split(pat, -1) {
-		patternMap[part] = true
-	}
-	for part := range patternMap {
-		ret = append(ret, part)
-	}
-
-	return ret
+	return patternSep.Split(pat, -1)
 }
 
 func parseCommand() []string {
