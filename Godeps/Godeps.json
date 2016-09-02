@@ -1,0 +1,26 @@
+{
+	"ImportPath": "wu",
+	"GoVersion": "go1.5",
+	"GodepVersion": "v74",
+	"Deps": [
+		{
+			"ImportPath": "github.com/fsnotify/fsnotify",
+			"Comment": "v1.3.1-1-gf12c623",
+			"Rev": "f12c6236fe7b5cf6bcf30e5935d08cb079d78334"
+		},
+		{
+			"ImportPath": "github.com/shanzi/wu/command",
+			"Comment": "v0.1-1-gf09a3df",
+			"Rev": "f09a3dfd2a0ddfd110e27a10f75b64de2b4a9d11"
+		},
+		{
+			"ImportPath": "github.com/shanzi/wu/runner",
+			"Comment": "v0.1-1-gf09a3df",
+			"Rev": "f09a3dfd2a0ddfd110e27a10f75b64de2b4a9d11"
+		},
+		{
+			"ImportPath": "golang.org/x/sys/unix",
+			"Rev": "a646d33e2ee3172a661fc09bca23bb4889a41bc8"
+		}
+	]
+}

@@ -10,11 +10,18 @@ loop of development. Although it is quite similar to watch tasks of Grunt or Gul
 # Install
 
 To install `wu` from source code, you have to install Golang's tool chain first.
-Then run:
 
+Install [godep](https://github.com/tools/godep):
 ```
-go get github.com/shanzi/wu
-go install github.com/shanzi/wu
+go get github.com/tools/godep
+```
+Install packages dependencies:
+```
+godep get
+```
+Build:
+```
+make
 ```
 
 Precompiled version can be found [here](https://github.com/shanzi/wu/releases).

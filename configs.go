@@ -20,6 +20,7 @@ var configfile = flag.String("config", ".wu.json", "Config file")
 var directory = flag.String("dir", "", "Directory to watch")
 var pattern = flag.String("pattern", "", "Patterns to filter filenames")
 var saveconf = flag.Bool("save", false, "Save options to conf")
+var showVersion = flag.Bool("version", false, "Show version info")
 
 func init() {
 	flag.Usage = func() {
@@ -30,6 +31,11 @@ func init() {
 
 func getConfigs() Configs {
 	flag.Parse()
+
+	if *showVersion {
+		PrintVersion()
+		os.Exit(0)
+	}
 
 	conf := readConfigFile()
 
@@ -99,20 +105,8 @@ func parsePatterns() []string {
 	if pat == "" {
 		return nil
 	}
-
 	patternSep, _ := regexp.Compile("[,\\s]+")
-
-	patternMap := make(map[string]bool)
-	ret := []string{}
-
-	for _, part := range patternSep.Split(pat, -1) {
-		patternMap[part] = true
-	}
-	for part := range patternMap {
-		ret = append(ret, part)
-	}
-
-	return ret
+	return patternSep.Split(pat, -1)
 }
 
 func parseCommand() []string {
