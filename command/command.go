@@ -14,7 +14,7 @@ import (
 
 type Command interface {
 	String() string
-	Start(delay time.Duration)
+	Start(delay time.Duration, haveBuild bool)
 	Terminate(wait time.Duration)
 }
 
@@ -47,7 +47,7 @@ func (c *command) String() string {
 	return fmt.Sprintf("%s %s", c.name, strings.Join(c.args, " "))
 }
 
-func (c *command) Start(delay time.Duration) {
+func (c *command) Start(delay time.Duration, haveBuild bool) {
 	time.Sleep(delay) // delay for a while to avoid start too frequently
 
 	c.mutex.Lock()
@@ -85,7 +85,11 @@ func (c *command) Start(delay time.Duration) {
 
 			cmd.Wait()
 			if cmd.ProcessState.Success() {
-				log.Println("- Done.")
+				if haveBuild {
+					log.Println("Restart application success!")
+				} else {
+					log.Println("Start application success!")
+				}
 			} else {
 				log.Println("- Terminated.")
 			}

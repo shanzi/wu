@@ -4,10 +4,13 @@ package main
 import (
 	"github.com/shanzi/wu/command"
 	"github.com/shanzi/wu/runner"
+
 	"log"
 	"os"
 	"os/signal"
 	"path/filepath"
+	// "wu/command"
+	// "wu/runner"
 )
 
 func init() {

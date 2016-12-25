@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 	"time"
+	// "wu/command"
 )
 
 type Runner interface {
@@ -51,10 +52,10 @@ func (r *runner) Start() {
 		log.Fatal("Failed to initialize watcher:", err)
 	}
 	matched := match(changed, r.patterns)
-	log.Println("Start watching...")
 
 	// Run the command once at initially
-	r.command.Start(200 * time.Millisecond)
+	haveBuild := false
+	r.command.Start(200*time.Millisecond, haveBuild)
 	for fp := range matched {
 		files := gather(fp, matched, 500*time.Millisecond)
 
@@ -64,7 +65,8 @@ func (r *runner) Start() {
 		log.Println("File changed:", strings.Join(files, ", "))
 
 		// Run new command
-		r.command.Start(200 * time.Millisecond)
+		haveBuild = true
+		r.command.Start(200*time.Millisecond, haveBuild)
 	}
 }
 
