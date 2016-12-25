@@ -2,6 +2,7 @@ package runner
 
 import (
 	"github.com/fsnotify/fsnotify"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -13,13 +14,6 @@ func watch(path string, abort <-chan struct{}) (<-chan string, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
-	}
-
-	for p := range list(path) {
-		err = watcher.Add(p)
-		if err != nil {
-			log.Printf("Failed to watch: %s, error: %s", p, err)
-		}
 	}
 
 	out := make(chan string)
@@ -40,15 +34,35 @@ func watch(path string, abort <-chan struct{}) (<-chan string, error) {
 					info, err := os.Stat(fp.Name)
 					if err == nil && info.IsDir() {
 						// Add newly created sub directories to watch list
+						log.Printf("Add newly diectory ( %s )\n", fp.Name)
 						watcher.Add(fp.Name)
 					}
 				}
-				out <- fp.Name
+
+				if fp.Op&fsnotify.Write == fsnotify.Write || fp.Op == fsnotify.Remove || fp.Op == fsnotify.Rename {
+					out <- fp.Name
+				}
+
 			case err := <-watcher.Errors:
 				log.Println("Watch Error:", err)
 			}
 		}
 	}()
+
+	// Start watch
+	{
+		var paths []string
+		currpath, _ := os.Getwd()
+
+		readAppDirectories(currpath, &paths)
+
+		log.Println("Start watching...")
+
+		for _, dir := range paths {
+			watcher.Add(dir)
+			log.Printf("Directory( %s )\n", dir)
+		}
+	}
 
 	return out, nil
 }
@@ -60,6 +74,13 @@ func match(in <-chan string, patterns []string) <-chan string {
 		defer close(out)
 		for fp := range in {
 			info, err := os.Stat(fp)
+
+			if os.IsNotExist(err) {
+				log.Printf("Dictory (%s) have been removed\n", fp)
+				log.Println("here=======here")
+				continue
+			}
+
 			if os.IsNotExist(err) || !info.IsDir() {
 				_, fn := filepath.Split(fp)
 				for _, p := range patterns {
@@ -69,39 +90,6 @@ func match(in <-chan string, patterns []string) <-chan string {
 				}
 			}
 		}
-	}()
-
-	return out
-}
-
-func list(root string) <-chan string {
-	out := make(chan string)
-
-	info, err := os.Stat(root)
-	if err != nil {
-		log.Fatalf("Failed to visit %s, error: %s\n", root, err)
-	}
-	if !info.IsDir() {
-		go func() {
-			defer close(out)
-			out <- root
-		}()
-
-		return out
-	}
-
-	go func() {
-		defer close(out)
-		filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-			if info.IsDir() {
-				if err != nil {
-					log.Printf("Failed to visit directory: %s, error: %s", path, err)
-					return err
-				}
-				out <- path
-			}
-			return nil
-		})
 	}()
 
 	return out
@@ -131,4 +119,29 @@ loop:
 
 	sort.Strings(ret)
 	return ret
+}
+
+func readAppDirectories(directory string, paths *[]string) {
+	fileInfos, err := ioutil.ReadDir(directory)
+
+	if err != nil {
+		return
+	}
+
+	haveDir := false
+	for _, fileinfo := range fileInfos {
+		if fileinfo.IsDir() == true && fileinfo.Name() != "." && fileinfo.Name() != ".git" {
+			readAppDirectories(directory+"/"+fileinfo.Name(), paths)
+			continue
+		}
+
+		if haveDir {
+			continue
+		}
+
+		if filepath.Ext(fileinfo.Name()) == ".go" {
+			*paths = append(*paths, directory)
+			haveDir = true
+		}
+	}
 }
